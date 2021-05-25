@@ -1,117 +1,130 @@
 from structures import Structures 
 import os
 import math
-
+import numpy as np
 
 
 class HMM:
-    
-    c = []
 
-    def getTestScore(a, b, pi, o):          # GET MODEL SCORE 
-        T = len(o)
+    def getTestScore(A, B, pi, O):          # GET MODEL SCORE 
+        T = len(O)
         N = len(pi)
-        alpha = HMM.alpha_pass( a, b, pi, o)
+        alpha = HMM.alpha_pass( A, B, pi, O)
 
         score = 0
         for i in range(0, N):
             score += alpha[T - 1][i]
 
+        print("------ MODEL TEST SCORE OUTPUT -------\n", score, "\n -------")
+
         return score
 
-    def alpha_pass(a, b, pi, o):            # ALPHA PASS ALG
-        T = len(o)
+
+    def alpha_pass(A, B, pi, O):            # ALPHA PASS ALG
+        T = len(O)
         N = len(pi)
+        C = [0] * T
+
         alpha = [ [0] * N for i in range(T) ]
-
-        # Compute alpha[0][j]
-        HMM.c.append(0)
-        for i in range(0, N):
-            for j in range(0, T):
-                k = pi[i] * b[o[0]][i]
-                alpha[0][i] = k
-            HMM.c[0] += alpha[0][i]
         
-        # print("first transformation of c:", HMM.c)
-        # Scale the alhpha[0][i]
-        HMM.c[0] = 1.0 / HMM.c[0]
-        for i in range(0, N):
-            alpha[0][i] = HMM.c[0] * alpha[0][i]
 
+        # Compute alpha[0][i]
+        
+        for i in range(0, N):
+            alpha[0][i] = pi[i] * B[i][O[0]]
+            C[0] = alpha[0][i]
+        
+        # Scale the alhpha[0][i]
+        C[0] = 1.0 / C[0]
+        for i in range(0, N):
+            alpha[0][i] = C[0] * alpha[0][i]
+        
         # Compute alpha[t][i]
         for t in range(1, T):
-            HMM.c.append(0)
-            
             for i in range(0, N):
-
                 for j in range(0, N):
-                    alpha[t][i] += alpha[t-1][j] * a[j][i]
+                    alpha[t][i] += alpha[t-1][j] * A[j][i]
 
-                
-                alpha[t][i] *= b[o[t]][i]
-                HMM.c[t] += alpha[t][i]
-        
-        # print("BEFORE CALING ALPHA: ", alpha)
-    
-        # Scale alpha[t][i]
-        for t in range(0, T):
-            HMM.c[t] = 1 / HMM.c[t] 
-            for i in range(0, N):
-                alpha[t][i] = HMM.c[t] * alpha[t][i]
+                alpha[t][i] *= B[ i ][ O[t] ] # ! POF
+                C[t] = alpha[t][i]
             
+            # Scale alpha[t][i]
+            C[t] = 1 / C[t] 
+            for i in range(0, N):
+                alpha[t][i] *= C[t]
+        
         return alpha
     
-    def beta_pass(a, b, pi, o):             # BETA PASS ALG
-        T = len(o)
+
+    def beta_pass(A, B, pi, O):             # BETA PASS ALG
+        T = HMM.T
         N = len(pi)
         beta = [ [0] * N for i in range(T) ]
-        # print(HMM.c)
-        
+        C = HMM.C
+
         # Let beta[T-1][i] = 1, scaled by c[t]
         for i in range(0, N):
-            beta[T-1][i] = 1 / HMM.c[T-1]
-        
-        # print("PRINTING b ------ \n",b)
-        # print("PRINTING beta ------ \n",beta)
+            beta[T-1][i] = 1 / C[T-1] # ! Math says betaT-1[i] = 1 scaled by Ct-1
+
 
         for t in reversed(range(0, T-1)):
             for i in range(0, N):
-                beta[t][i] = 0
                 for j in range(0, N):
+                    beta[t][i] = A[i][j] * B[j][O[t+1]] * beta[t+1][j]
                     
-                    # print("PRINTING o[t+1] ------ \n",o[t+1])
-                    # print("PRINTING j ------ \n", j)
-                    x = beta[t+1][j] *  a[i][j] * b[o[t+1]][j]
-                    beta[t][i] += x
-                    
-        # print("BEFORE SCALING BETA: ",beta)
-        # Scale beta[t][i] with sam scale factor as alpha[t][i]
-        for t in reversed(range(0, T-1)):
+        # Scale beta[t][i] with same scale factor as alpha[t][i]
             for i in range(0, N):
-                beta[t][i] = HMM.c[t] * beta[t][i]
+                beta[t][i] = C[t] * beta[t][i]
         
         return beta
 
+
+    def runHelper(A, B, Pi, O):  # helper function to test alpha/beta pass
+        
+        # alpha_helper = HMM.alpha_pass(A, B, Pi, O) # You must run alpha to get c scale
+        # c_value = HMM.C
+        # beta_helper = HMM.beta_pass(A, B, Pi, O)
+        gamma_helper = HMM.gamma_calculations(A, B, Pi, O)
+        
+        print(" \n ------------------ HELPER OUTPUT --------- \n")
+
+        # print("------ ALPHA PASS OUTPUT -------\n", alpha_helper, "\n-------")
+        # print("------ SHAPE ALPHA MATRIX ------ \n", np.shape(alpha_helper),"\n ------------------" )
+        # print("------ LENGTH ALPHA MATRIX ------ \n", len(alpha_helper),"\n ------------------" )
+
+        # print("------ C SCALAR (after alpha before beta) -------\n", c_value, "\n-------")
+        # print("------ SHAPE C SCALAR ------ \n", np.shape(c_value),"\n ------------------" )
+        # print("------ LENGTH C SCALAR ------ \n", len(c_value),"\n ------------------" )
+        
+        # print("------ BETA PASS OUTPUT -------\n", beta_helper, "\n -------")
+        # print("------ SHAPE BETA MATRIX ------ \n", np.shape(beta_helper),"\n ------------------" )
+        # print("------ LENGTH BETA MATRIX ------ \n", len(beta_helper),"\n ------------------" )
+
+        print("------ GAMMA CALC OUTPUT -------\n", gamma_helper, "\n -------")
+        print("------ SHAPE GAMMA MATRIX ------ \n", np.shape(gamma_helper),"\n ------------------" )
+        print("------ LENGTH GAMMA MATRIX ------ \n", len(gamma_helper),"\n ------------------" )
+
+    
     def gamma_calculations(A, B, Pi, O): # Calculate Gamma matrix
-        T = len(O)
+        T = HMM.T
         N = len(Pi)
 
         alpha = HMM.alpha_pass(A, B, Pi, O)
         beta = HMM.beta_pass(A, B, Pi, O)
-        gamma = [[0]*N]*T
+        gamma = [ [0] * N for i in range(T) ]
 
         # COMPUTING GAMMA 
         for t in range(0, T-1):
             denom = 0
             for i in range(0, N):
                 for j in range(0,N):
-                    x = alpha[t][i] * A[i][j] * B[O[t+1]][j] * beta[t+1][j]
+                    x = alpha[t][i] * A[i][j] * B[j][O[t+1]] * beta[t+1][j]
                     denom += x
 
             for i in range(0, N):
                 for j in range(0, N):
-                    # !! TODO: Fix denom by zero error due to zero values in returned beta
-                    gamma[t][i] = alpha[t][i] * A[i][j] * B[O[t+1]][j] # / denom 
+                    # !!  POF TODO: Fix denom by zero error due to zero values in returned beta
+                    gamma[t][i] = alpha[t][i] * A[i][j] * B[j][O[t+1]]  / denom 
                     gamma[t][i] = gamma[t][i] +  gamma[t][j] 
         
         # Special case for gamma[T-1][i]
@@ -121,19 +134,17 @@ class HMM:
         for i in range(0, N):
             gamma[T-1][i] = alpha[T-1][i] / denom 
 
-        return gamma # // Everything the same
-    
-    def runHelper(A, B, Pi, O):  # helper function to test alpha/beta pass
-            alpha2 = HMM.alpha_pass(A, B, Pi, O) # You must run alpha to get c scale
-            beta2 = HMM.beta_pass(A, B, Pi, O)
+        return gamma 
+
 
     def buildModel(O):                      # COMPILES MODEL
+        
         # UNDER CONSTRUCTION
         logProb = 0.0
         oldLogProb = -math.inf
         iterations = 0
         iterate = True
-        maxIterations = 100 
+        maxIterations = HMM.maxIterations
 
         # Import raw base (pi ,A, B)
         Pi = Structures.pi
@@ -197,37 +208,14 @@ class HMM:
         print("--- MODEL OUTPUT B --- \n ",B, "\n ---------\n")
         print("--- MODEL OUTPUT LEARNING EPOCHS --- \n ",iterations, "\n ---------\n")
         print("--- MODEL OUTPUT log[P(Observation | Lambda)] --- \n ",logProb, "\n ---------\n")
-        return # Pi, A, B, iterations, logProb
+        
+        return # Pi, A, B, iterations, logProb              # Might need to store model output?
 
 
-N = Structures.N
-M = Structures.M
 
-pi_matrix = Structures.pi
-a_matrix = Structures.A
-b_matrix = Structures.B
-dummy_observations = [1,2,0,2,0,2,1,2,0,1,2,0,1,0,2]
-
-#import winwebsec training data
-path = "training-data/trainingset_winwebsec.txt"
-with open(path, "r") as y:
-    train_winwebsec = y.read()
-
-winwebsec_observations = train_winwebsec.split()
-
-for x in range(0, len(winwebsec_observations)):
-    winwebsec_observations[x] = int(winwebsec_observations[x])
-
-# score = HMM.getTestScore(a_matrix, b_matrix, pi_matrix, winwebsec_observations)
-# alpha = HMM.alpha_pass(a_matrix, b_matrix, pi_matrix, winwebsec_observations)
-# beta = HMM.beta_pass(a_matrix, b_matrix, pi_matrix, winwebsec_observations)
-# gamma = HMM.gamma_calculations(a_matrix, b_matrix, pi_matrix, dummy_observations)
-# helper = HMM.runHelper(a_matrix, b_matrix, pi_matrix, winwebsec_observations)
-model = HMM.buildModel(winwebsec_observations)
-
-
-# TO DO:
-# * Put init code in its own main.py file
-# * Improve stochasticity of raw structures
-# * Fix naming conventions of A/B/Pi throughout HMM Class
-# * Add any missing documentation
+#   --- TO DO --- 
+#   * Clean up init C/T stuff then fix C before beta issue? Re-wire everything back and test through gamma.
+#   * Input/Output clean up, function clean up
+#   * Improve stochasticity of raw structures
+#   * Output and save Test 1 - 6 models
+#   * Add any missing documentation

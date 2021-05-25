@@ -1,5 +1,6 @@
 import random as r 
 from random import randint
+import numpy as np
 
 
 class Structures:
@@ -7,11 +8,8 @@ class Structures:
     N = 2
     M = 3
     A = [[0] * N] * N
-    B = [[0] * N] * M
+    B = [[0] * M] * N
     pi = [[0] * N]
-
-    trainSeq = []
-    testSeq = [] 
 
     # Scales for randomizing stochastic matricies.
     scale1 = 1.0 / N
@@ -34,7 +32,7 @@ class Structures:
     bRowSums = []
     rowSum = 0
     
-    # Generate NxN matrix of random numbers not yet stochastic
+    # Generate A NxN matrix of random numbers not yet stochastic
     for i in range(0, len(A)):
         for j in range(len(A[i])):
             randomValue = min1 + (max1 - min1) * r.random()
@@ -43,17 +41,17 @@ class Structures:
         aRowSums.append(rowSum)
         rowSum = 0
 
-    # Generate NxM matrix of random numbers not yet stochastic
+    # Generate B NxM matrix of random numbers not yet stochastic
     for i in range(0, len(B)):
         for j in range(len(B[i])):
-            randomValue = min1 + (max1 - min1) * r.random()
+            randomValue = min2 + (max2 - min2) * r.random()
             B[i][j] = randomValue
             rowSum += B[i][j]
         bRowSums.append(rowSum)
         rowSum = 0
 
 
-    # Generate 1xN matrix of random numbers not yet stochastic
+    # Generate Pi 1xN matrix of random numbers not yet stochastic
     for i in range(0, len(pi)):
         randomValue = min1 + (max1 - min1) * r.random()
         pi.append(randomValue)
@@ -66,6 +64,7 @@ class Structures:
     misCalc = 0 #How off the sum of a row is from 1
     reCalc = 0  #How much needs to be distributed or subtracted from each element
 
+    # Pi adjustment for stochasticity 
     if piRowSum > 1:
         misCalc = piRowSum - 1
         reCalc = misCalc / len(pi)
@@ -84,6 +83,7 @@ class Structures:
     misCalc = 0 #How off the sum of a row is from 1
     reCalc = 0  #How much needs to be distributed or subtracted from each element
 
+    # A adjustment for stochasticity 
     for i in range(0, len(A)):
         if aRowSums[i] > 1:
             misCalc = aRowSums[i] - 1
@@ -102,6 +102,7 @@ class Structures:
     misCalc = 0 #How off the sum of a row is from 1
     reCalc = 0  #How much needs to be distributed or subtracted from each element
     
+    # B adjustment for stochasticity 
     for i in range(0, len(B)):
         if bRowSums[i] > 1:
             misCalc = bRowSums[i] - 1
@@ -122,16 +123,25 @@ class Structures:
     reCalc = 0  #How much needs to be distributed or subtracted from each element
 
 
+# LOGBOOK:
+# No longer random from uniform distirbuted pool.
+# Need to improve stochasticity
+#
 
+################################### DEBUGGER ###################################
+## Output raw generated random values to compare with stochastic checker
+# print("--- RAW RANDOMLY GENERATED STRUCTURES --- \n A \n---", Structures.A, "\n ---")
+# print("--- RAW RANDOMLY GENERATED STRUCTURES --- \n B \n---", Structures.B, "\n ---")
+# print("--- RAW RANDOMLY GENERATED STRUCTURES --- \n Pi \n---", Structures.pi, "\n ---")
 
-## DEBUG OUTPUT
-# print("\n RAW RANDOME GENERATED STRUCTURES \n")
-# print("A: ", Structures.A)
-# print("B: ", Structures.B)
-# print("pi: ", Structures.pi)
+# Stochastoc check for each M row in all three output structures | if Raw Sum ~ 1, we're good!
+# print("--- RAW SUM OF GENERATED STRUCTURES --- \n Pi \n---", Structures.piRowSum)
+# print("--- RAW SUM OF GENERATED STRUCTURES --- \n A \n---", Structures.aRowSums)
+# print("--- RAW SUM OF GENERATED STRUCTURES --- \n B \n---", Structures.bRowSums)
 
-# print("\n RAW SUM OF GENERATED STRUCTURES \n")
-# print("piRowSum: ", Structures.piRowSum)
-# print("aRowSums: ", Structures.aRowSums)
-# print("bRowSums: ", Structures.bRowSums, "\n")
+# Checking initial state, transition, and observation matricies
+# print("------ SHAPE: A MATRIX ------ \n", np.shape(Structures.A),"\n ------------------" )
+# print("------ LENGTH: A MATRIX ------ \n", len(Structures.A),"\n ------------------" )
 
+# print("------ SHAPE: B MATRIX ------ \n", np.shape(Structures.B),"\n ------------------" )
+# print("------ LENGTH: B MATRIX ------ \n", len(Structures.B),"\n ------------------" )

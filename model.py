@@ -64,7 +64,7 @@ class HMM:
     def beta_pass(a, b, pi, o):             # BETA PASS ALG
         T = len(o)
         N = len(pi)
-        beta = [[0]*N]*T
+        beta = [ [0] * N for i in range(T) ]
         # print(HMM.c)
         
         # Let beta[T-1][i] = 1, scaled by c[t]
@@ -72,6 +72,8 @@ class HMM:
             beta[T-1][i] = 1 / HMM.c[T-1]
         
         # print("PRINTING b ------ \n",b)
+        # print("PRINTING beta ------ \n",beta)
+
         for t in reversed(range(0, T-1)):
             for i in range(0, N):
                 beta[t][i] = 0
@@ -98,14 +100,6 @@ class HMM:
         beta = HMM.beta_pass(A, B, Pi, O)
         gamma = [[0]*N]*T
 
-        # print("--- INSIDE GAMMA_CALC --- GAMMA MATRIX T-1xN: \n ",gamma, "\n ---------\n")
-        # print("--- INSIDE GAMMA_CALC --- Pi MATRIX 1xN: \n ",Pi, "\n ---------\n")
-        # print("--- INSIDE GAMMA_CALC --- A MATRIX NxN: \n ",A, "\n ---------\n")
-        # print("--- INSIDE GAMMA_CALC --- B MATRIX MxN: \n ",B, "\n ---------\n")
-        # print("--- INSIDE GAMMA_CALC --- ALPHA TxN: \n ",alpha, "\n ---------\n")
-        # print("--- INSIDE GAMMA_CALC --- BETA TxN: \n ",beta, "\n ---------\n")
-        # print("--- INSIDE GAMMA_CALC --- C SCALE : \n ",HMM.c, "\n ---------\n")
-        
         # COMPUTING GAMMA 
         for t in range(0, T-1):
             denom = 0
@@ -186,7 +180,7 @@ class HMM:
 
             # Compute log[P(O | Lambda)]
             for i in range(0, T):
-                logProb += math.log(HMM.c[i])
+                logProb += math.log(HMM.c[i]) 
             
             logProb *= -1
 
@@ -202,7 +196,7 @@ class HMM:
         print("--- MODEL OUTPUT A --- \n ",A, "\n ---------\n")
         print("--- MODEL OUTPUT B --- \n ",B, "\n ---------\n")
         print("--- MODEL OUTPUT LEARNING EPOCHS --- \n ",iterations, "\n ---------\n")
-        print("--- MODEL OUTPUT log[P(O | Lambda)] --- \n ",logProb, "\n ---------\n")
+        print("--- MODEL OUTPUT log[P(Observation | Lambda)] --- \n ",logProb, "\n ---------\n")
         return # Pi, A, B, iterations, logProb
 
 
@@ -231,8 +225,9 @@ for x in range(0, len(winwebsec_observations)):
 # helper = HMM.runHelper(a_matrix, b_matrix, pi_matrix, winwebsec_observations)
 model = HMM.buildModel(winwebsec_observations)
 
-# print("Model output testScore: ", score)
-# print("Model output alpha pass: ", alpha)
-# print("Model output beta pass: ", beta)
-# print("Model output gamma: ", gamma)
-# print("Model runHelper_ALPHA_BETA output: ", runHelper_ALPHA_BETA)
+
+# TO DO:
+# * Put init code in its own main.py file
+# * Improve stochasticity of raw structures
+# * Fix naming conventions of A/B/Pi throughout HMM Class
+# * Add any missing documentation

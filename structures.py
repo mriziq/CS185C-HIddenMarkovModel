@@ -24,8 +24,8 @@ class Structures:
     max2 = scale2 + 0.01
 
     #Random seed uniform distirbution range
-    begin = 0.00000000000000001
-    end = 0.99999999999999999
+    begin = 0.0
+    end = 1.0
 
     piRowSum = 0
     aRowSums = []
@@ -35,7 +35,7 @@ class Structures:
     # Generate A NxN matrix of random numbers not yet stochastic
     for i in range(0, len(A)):
         for j in range(len(A[i])):
-            randomValue = min1 + (max1 - min1) * r.random()
+            randomValue = min1 + (max1 - min1) * r.randint(begin, end)
             A[i][j] = randomValue
             rowSum += A[i][j]
         aRowSums.append(rowSum)
@@ -44,7 +44,7 @@ class Structures:
     # Generate B NxM matrix of random numbers not yet stochastic
     for i in range(0, len(B)):
         for j in range(len(B[i])):
-            randomValue = min2 + (max2 - min2) * r.random()
+            randomValue = min2 + (max2 - min2) * r.randint(begin, end)
             B[i][j] = randomValue
             rowSum += B[i][j]
         bRowSums.append(rowSum)
@@ -53,7 +53,7 @@ class Structures:
 
     # Generate Pi 1xN matrix of random numbers not yet stochastic
     for i in range(0, len(pi)):
-        randomValue = min1 + (max1 - min1) * r.random()
+        randomValue = min1 + (max1 - min1) * r.randint(begin, end)
         pi.append(randomValue)
         pi[i] = randomValue
 

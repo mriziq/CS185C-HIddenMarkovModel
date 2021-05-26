@@ -5,217 +5,277 @@ import numpy as np
 
 
 class HMM:
+    
+    def __init__(self):
+        # Import raw base (pi ,A, B)
+        self.pi = Structures.pi
+        self.A = Structures.A
+        self.B = Structures.B
+        self.M = Structures.M
+        
+         
+    def start_engine(self, O, maxIters):    # CONSTRUCTOR //
+                                            # O = observation set [1xT]
 
-    def getTestScore(A, B, pi, O):          # GET MODEL SCORE 
-        T = len(O)
-        N = len(pi)
-        alpha = HMM.alpha_pass( A, B, pi, O)
 
+        self.O = O                          # Observation sequence
+        self.T = len(self.O)                # Length of Observations 
+        self.N = len(self.pi)               # Number of states in the model
+        
+        self.c_scale = [0] * len(self.O)    # C Scale
+        
+        self.iterate = True                 # Boolean to turn on loop
+        self.iters = 0                      # Iteration counter
+        self.maxIters = maxIters            # maxIters = max iterations int
+
+        self.logProb = 0.0                  # HMM Model logRob
+        self.oldLogProb = float('-inf')     # 
+
+        self.alpha = [ [0] * self.N         # P( observation k, state q | model )
+            for i in range(self.T) ]        
+        
+        self.beta = [ [0] * self.N          # P( observation k | state q, model )
+            for i in range(self.T) ]
+
+        self.digamma = [[ [0] * self.N ] * self.N] * self.T     #
+        self.gamma = [ [0] * self.N for i in range(self.T) ]    #
+
+
+    def getTestScore(self, alpha):
+        # Alpha Pass
+        alpha = alpha
+
+        # Sum of Alpha Pass
         score = 0
-        for i in range(0, N):
-            score += alpha[T - 1][i]
+        for i in range(0, self.N):           # SUM(P( observation k, state q | model ))
+            score += alpha[self.T - 1][i]   
 
         print("------ MODEL TEST SCORE OUTPUT -------\n", score, "\n -------")
-
+        
         return score
 
+    
+    def alpha_pass(self):                   # FORWARD ALG
+        alpha = self.alpha
 
-    def alpha_pass(A, B, pi, O):            # ALPHA PASS ALG
-        T = len(O)
-        N = len(pi)
-        C = [0] * T
+        # Alpha Pass alpha[0]
+        self.c_scale[0] = 0
+        for i in range(0, self.N):
+            alpha[0][i] = self.B[i][self.O[0]] * self.pi[i]
 
-        alpha = [ [0] * N for i in range(T) ]
-        
+            # if i == 0:
+            #     print(alpha[0][i])
+            #     print(self.pi[i])
+            #     print(self.B[i][self.O[0]])
 
-        # Compute alpha[0][i]
+            self.c_scale[0] += alpha[0][i]
         
-        for i in range(0, N):
-            alpha[0][i] = pi[i] * B[i][O[0]]
-            C[0] = alpha[0][i]
+        # Scale alhpha[0][i]
+        self.c_scale[0] = 1.0 / self.c_scale[0]
+        for i in range(0, self.N):
+            alpha[0][i] *= self.c_scale[0]
         
-        # Scale the alhpha[0][i]
-        C[0] = 1.0 / C[0]
-        for i in range(0, N):
-            alpha[0][i] = C[0] * alpha[0][i]
-        
-        # Compute alpha[t][i]
-        for t in range(1, T):
-            for i in range(0, N):
-                for j in range(0, N):
-                    alpha[t][i] += alpha[t-1][j] * A[j][i]
+        # Alpha Pass 
+        for t in range(1, self.T):
+            self.c_scale[t] = 0
+            for i in range(0, self.N):
+                alpha[t][i] = 0
+                for j in range(0, self.N):
+                    alpha[t][i] += alpha[t-1][j] * self.A[j][i]
 
-                alpha[t][i] *= B[ i ][ O[t] ] # ! POF
-                C[t] = alpha[t][i]
+                alpha[t][i] *= self.B[ i ][ self.O[t] ] 
+                self.c_scale[t] += alpha[t][i]
             
-            # Scale alpha[t][i]
-            C[t] = 1 / C[t] 
-            for i in range(0, N):
-                alpha[t][i] *= C[t]
-        
-        return alpha
+            # Scale Alpha
+            self.c_scale[t] = 1 / self.c_scale[t] 
+            for i in range(0, self.N):
+                alpha[t][i] *= self.c_scale[t]
+
+        self.alpha = alpha
+        return self.alpha
     
 
-    def beta_pass(A, B, pi, O):             # BETA PASS ALG
-        T = HMM.T
-        N = len(pi)
-        beta = [ [0] * N for i in range(T) ]
-        C = HMM.C
+    def beta_pass(self):                       # BACKWARD ALG
+        beta = self.beta
 
-        # Let beta[T-1][i] = 1, scaled by c[t]
-        for i in range(0, N):
-            beta[T-1][i] = 1 / C[T-1] # ! Math says betaT-1[i] = 1 scaled by Ct-1
+        # Beta Pass beta[T-1]
+        for i in range(0, self.N):
+            beta[self.T-1][i] = 1 / self.c_scale[self.T-1] 
 
-
-        for t in reversed(range(0, T-1)):
-            for i in range(0, N):
-                for j in range(0, N):
-                    beta[t][i] = A[i][j] * B[j][O[t+1]] * beta[t+1][j]
+        # Beta Pass
+        for t in reversed(range(0, self.T-1)):
+            for i in range(0, self.N):
+                for j in range(0, self.N):
+                    beta[t][i] = beta[t][i] + self.A[i][j] * self.B[j][self.O[t+1]] * beta[t+1][j]
                     
-        # Scale beta[t][i] with same scale factor as alpha[t][i]
-            for i in range(0, N):
-                beta[t][i] = C[t] * beta[t][i]
+            # Scale Beta
+            for i in range(0, self.N):
+                beta[t][i] = self.c_scale[t] * beta[t][i]
         
-        return beta
+        self.beta = beta
+        return self.beta
 
 
-    def runHelper(A, B, Pi, O):  # helper function to test alpha/beta pass
+    def gamma_pass(self):
+
+        # Complile forward and backward layers on logic level 
+        HMM.alpha_pass(self)
+        HMM.beta_pass(self)
         
-        # alpha_helper = HMM.alpha_pass(A, B, Pi, O) # You must run alpha to get c scale
-        # c_value = HMM.C
-        # beta_helper = HMM.beta_pass(A, B, Pi, O)
-        gamma_helper = HMM.gamma_calculations(A, B, Pi, O)
+        # Gamma and Digamma
+        for t in range(0, self.T-1):
+            denom = 0
+            for i in range(0,self.N):
+                for j in range(0,self.N):
+                    denom += self.alpha[t][i] * self.A[i][j] * self.B[j][self.O[t+1]] * self.beta[t+1][j]
+            
+            for i in range(0,self.N):
+                for j in range(0, self.N):
+                    self.digamma[t][i][j] = self.alpha[t][i] * self.A[i][j] * self.B[j][self.O[t+1]] * self.beta[t+1][j] / denom
+                    self.gamma[t][i] += self.digamma[t][i][j]
+
+        # Special case for Gamma
+        denom = 0
+        for i in range(0,self.N):
+            denom += self.alpha[self.T-1][i]
+
+        for i in range(0, self.N):
+            self.gamma[self.T-1][i] / denom
         
-        print(" \n ------------------ HELPER OUTPUT --------- \n")
+        return 
 
-        # print("------ ALPHA PASS OUTPUT -------\n", alpha_helper, "\n-------")
-        # print("------ SHAPE ALPHA MATRIX ------ \n", np.shape(alpha_helper),"\n ------------------" )
-        # print("------ LENGTH ALPHA MATRIX ------ \n", len(alpha_helper),"\n ------------------" )
 
-        # print("------ C SCALAR (after alpha before beta) -------\n", c_value, "\n-------")
-        # print("------ SHAPE C SCALAR ------ \n", np.shape(c_value),"\n ------------------" )
-        # print("------ LENGTH C SCALAR ------ \n", len(c_value),"\n ------------------" )
+    def run_model(self):
+
+        while(self.iterate):
+            
+            # Run compiled alpha pass, beta pass, gammas transformation
+            HMM.gamma_pass(self)
+
+            # Re-estimate pi
+            for i in range(0, self.N):
+                self.pi = self.gamma[0][i]
+            
+            # Re-estimate A
+            for i in range(0, self.N):
+                denom = 0
+                for t in range(0, self.T-1):
+                    denom += self.gamma[t][i]
+                
+                for j in range(0,self.N):
+                    numer = 0
+                    for t in range(0, self.T-1):
+                        numer += self.digamma[t][i][j]
+                
+                    self.A[i][j] = numer / denom
+
+            # Re-estimate B
+            for i in range(0, self.N):
+                denom = 0
+                for t in range(0, self.T):
+                    denom += self.gamma[t][i]
+                for j in range(0, self.M):
+                    numer = 0
+                    for t in range(0, self.T):
+                        if self.O[t] == j:
+                            numer += self.gamma[t][i]
+                    
+                    self.B[i][j] = numer / denom
+
+            self.logProb = 0.0
+            for i in range(0, self.T):
+                self.logProb += math.log(self.c_scale[i])
+            
+            self.logProb *= -1
+
+            self.iters += 1
+            if self.iters < self.maxIters and self.logProb > self.oldLogProb:
+                self.oldLogProb = self.logProb
+                # go to alpha -> beta -> gammas
+            else:
+                self.iterate = False
         
-        # print("------ BETA PASS OUTPUT -------\n", beta_helper, "\n -------")
-        # print("------ SHAPE BETA MATRIX ------ \n", np.shape(beta_helper),"\n ------------------" )
-        # print("------ LENGTH BETA MATRIX ------ \n", len(beta_helper),"\n ------------------" )
+        print("\n------------ MODEL OUTPUT -------------\n")
+        print("\n------------ Lambda(pi) -------------\n", self.pi, "\n-------------------------")
+        print("\n------------ Lambda(A) -------------\n", self.A, "\n-------------------------")
+        print("\n------------ Lambda(B) -------------\n", self.B, "\n-------------------------")
 
-        print("------ GAMMA CALC OUTPUT -------\n", gamma_helper, "\n -------")
-        print("------ SHAPE GAMMA MATRIX ------ \n", np.shape(gamma_helper),"\n ------------------" )
-        print("------ LENGTH GAMMA MATRIX ------ \n", len(gamma_helper),"\n ------------------" )
+        return self.pi, self.A, self.B
+
 
     
-    def gamma_calculations(A, B, Pi, O): # Calculate Gamma matrix
-        T = HMM.T
-        N = len(Pi)
-
-        alpha = HMM.alpha_pass(A, B, Pi, O)
-        beta = HMM.beta_pass(A, B, Pi, O)
-        gamma = [ [0] * N for i in range(T) ]
-
-        # COMPUTING GAMMA 
-        for t in range(0, T-1):
-            denom = 0
-            for i in range(0, N):
-                for j in range(0,N):
-                    x = alpha[t][i] * A[i][j] * B[j][O[t+1]] * beta[t+1][j]
-                    denom += x
-
-            for i in range(0, N):
-                for j in range(0, N):
-                    # !!  POF TODO: Fix denom by zero error due to zero values in returned beta
-                    gamma[t][i] = alpha[t][i] * A[i][j] * B[j][O[t+1]]  / denom 
-                    gamma[t][i] = gamma[t][i] +  gamma[t][j] 
+    # def buildModel(O):                      # COMPILES MODEL
         
-        # Special case for gamma[T-1][i]
-        denom = 0
-        for i in range(0, N):
-            denom += alpha[T-1][i]
-        for i in range(0, N):
-            gamma[T-1][i] = alpha[T-1][i] / denom 
+    #     # UNDER CONSTRUCTION
+    #     logProb = 0.0
+    #     oldLogProb = -math.inf
+    #     iterations = 0
+    #     iterate = True
+    #     maxIterations = HMM.maxIterations
 
-        return gamma 
+    #     # Import raw base (pi ,A, B)
+    #     Pi = Structures.pi
+    #     A = Structures.A
+    #     B = Structures.B 
 
-
-    def buildModel(O):                      # COMPILES MODEL
+    #     # Get matricies' dimensions
+    #     N = len(A)  
+    #     M = len(B[0])
+    #     T = len(O)
         
-        # UNDER CONSTRUCTION
-        logProb = 0.0
-        oldLogProb = -math.inf
-        iterations = 0
-        iterate = True
-        maxIterations = HMM.maxIterations
+    #     while iterate:
 
-        # Import raw base (pi ,A, B)
-        Pi = Structures.pi
-        A = Structures.A
-        B = Structures.B 
-
-        # Get matricies' dimensions
-        N = len(A)  
-        M = len(B[0])
-        T = len(O)
-        
-        while iterate:
-
-            # Calling Gamma calculation (triggers Alpha & Beta pass)
-            gamma = HMM.gamma_calculations(A,B,Pi, O)
+    #         # Calling Gamma calculation (triggers Alpha & Beta pass)
+    #         gamma = HMM.gamma_calculations(A,B,Pi, O)
             
-            # Re-estimating pi
-            for i in range(0,N):
-                Pi[i] = gamma[0][i]
+    #         # Re-estimating pi
+    #         for i in range(0,N):
+    #             Pi[i] = gamma[0][i]
 
-            # Re-estimating A
-            for i in range(0,N):
-                denom = 0
-                for t in range(0,T-1):
-                    denom += gamma[t][i]
+    #         # Re-estimating A
+    #         for i in range(0,N):
+    #             denom = 0
+    #             for t in range(0,T-1):
+    #                 denom += gamma[t][i]
 
-                for j in range(0,N):
-                    numer = 0
-                    for t in range(0, T-1):
-                        numer += gamma[t][i] +  gamma[t][j]
-                    A[i][j] = numer / denom
+    #             for j in range(0,N):
+    #                 numer = 0
+    #                 for t in range(0, T-1):
+    #                     numer += gamma[t][i] +  gamma[t][j]
+    #                 A[i][j] = numer / denom
             
-            # Re-estimating B
-            for i in range(0, N):
-                denom = 0
-                for t in range(0, T):
-                    denom += gamma[t][i]
-                for j in range(0, M):
-                    numer = 0
-                    for t in range(0, T):
-                        if O[t] == j:
-                            numer += gamma[t][i]
-                    B[i][j] = numer / denom
+    #         # Re-estimating B
+    #         for i in range(0, N):
+    #             denom = 0
+    #             for t in range(0, T):
+    #                 denom += gamma[t][i]
+    #             for j in range(0, M):
+    #                 numer = 0
+    #                 for t in range(0, T):
+    #                     if O[t] == j:
+    #                         numer += gamma[t][i]
+    #                 B[i][j] = numer / denom
 
-            # Compute log[P(O | Lambda)]
-            for i in range(0, T):
-                logProb += math.log(HMM.c[i]) 
+    #         # Compute log[P(O | Lambda)]
+    #         for i in range(0, T):
+    #             logProb += math.log(HMM.c[i]) 
             
-            logProb *= -1
+    #         logProb *= -1
 
-            # To iterate or not to iterate, that is the question
-            iterations += 1
-            if iterations < maxIterations and logProb > oldLogProb:
-                oldLogProb = logProb
-                HMM.gamma_calculations(A, B, Pi, O)
-            else:
-                iterate = False
+    #         # To iterate or not to iterate, that is the question
+    #         iterations += 1
+    #         if iterations < maxIterations and logProb > oldLogProb:
+    #             oldLogProb = logProb
+    #             HMM.gamma_calculations(A, B, Pi, O)
+    #         else:
+    #             iterate = False
         
-        print("--- MODEL OUTPUT PI --- \n ",Pi, "\n ---------\n")
-        print("--- MODEL OUTPUT A --- \n ",A, "\n ---------\n")
-        print("--- MODEL OUTPUT B --- \n ",B, "\n ---------\n")
-        print("--- MODEL OUTPUT LEARNING EPOCHS --- \n ",iterations, "\n ---------\n")
-        print("--- MODEL OUTPUT log[P(Observation | Lambda)] --- \n ",logProb, "\n ---------\n")
+    #     print("--- MODEL OUTPUT PI --- \n ",Pi, "\n ---------\n")
+    #     print("--- MODEL OUTPUT A --- \n ",A, "\n ---------\n")
+    #     print("--- MODEL OUTPUT B --- \n ",B, "\n ---------\n")
+    #     print("--- MODEL OUTPUT LEARNING EPOCHS --- \n ",iterations, "\n ---------\n")
+    #     print("--- MODEL OUTPUT log[P(Observation | Lambda)] --- \n ",logProb, "\n ---------\n")
         
-        return # Pi, A, B, iterations, logProb              # Might need to store model output?
+    #     return # Pi, A, B, iterations, logProb              # Might need to store model output?
 
 
-
-#   --- TO DO --- 
-#   * Clean up init C/T stuff then fix C before beta issue? Re-wire everything back and test through gamma.
-#   * Input/Output clean up, function clean up
-#   * Improve stochasticity of raw structures
-#   * Output and save Test 1 - 6 models
-#   * Add any missing documentation

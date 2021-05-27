@@ -13,6 +13,7 @@ model.start_engine(key, maxIter)
 # model.alpha_pass()
 # model.beta_pass()
 # model.gamma_pass()
+# model.getTestScore()
 model.run_model()
 
 #   --- TO DO --- 

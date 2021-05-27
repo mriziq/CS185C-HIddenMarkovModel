@@ -41,14 +41,13 @@ class HMM:
         self.gamma = [ [0] * self.N for i in range(self.T) ]    #
 
 
-    def getTestScore(self, alpha):
-        # Alpha Pass
-        alpha = alpha
-
+    def getTestScore(self):
+        
+        HMM.alpha_pass(self)
         # Sum of Alpha Pass
         score = 0
         for i in range(0, self.N):           # SUM(P( observation k, state q | model ))
-            score += alpha[self.T - 1][i]   
+            score += self.alpha[self.T - 1][i]   
 
         print("------ MODEL TEST SCORE OUTPUT -------\n", score, "\n -------")
         
@@ -122,6 +121,9 @@ class HMM:
         HMM.alpha_pass(self)
         HMM.beta_pass(self)
         
+        gamma = self.gamma
+        digamma = self.digamma
+
         # Gamma and Digamma
         for t in range(0, self.T-1):
             denom = 0
@@ -131,8 +133,8 @@ class HMM:
             
             for i in range(0,self.N):
                 for j in range(0, self.N):
-                    self.digamma[t][i][j] = self.alpha[t][i] * self.A[i][j] * self.B[j][self.O[t+1]] * self.beta[t+1][j] / denom
-                    self.gamma[t][i] += self.digamma[t][i][j]
+                    digamma[t][i][j] = self.alpha[t][i] * self.A[i][j] * self.B[j][self.O[t+1]] * self.beta[t+1][j] / denom
+                    gamma[t][i] += digamma[t][i][j]
 
         # Special case for Gamma
         denom = 0
@@ -140,9 +142,12 @@ class HMM:
             denom += self.alpha[self.T-1][i]
 
         for i in range(0, self.N):
-            self.gamma[self.T-1][i] / denom
-        
-        return 
+            gamma[self.T-1][i] / denom
+
+        self.gamma = gamma
+        self.digamma = digamma
+
+        return self.gamma, self.digamma
 
 
     def run_model(self):

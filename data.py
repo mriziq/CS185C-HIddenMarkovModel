@@ -2,6 +2,7 @@ class data:
 
     def dummy():
         dummy_observations = [1,2,0,2,0,2,1,2,0,1,2,0,1,0,2]
+        # such that M = 2
         return dummy_observations
 
     def train_winwebsec():

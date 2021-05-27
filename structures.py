@@ -3,7 +3,7 @@ from random import randint
 import numpy as np
 
 
-class Structures:
+class Structures:     # This class generates stochatic initial, transition, and observation matrices used in model.py
     # columnxrows
     N = 2
     M = 3
@@ -122,11 +122,6 @@ class Structures:
     misCalc = 0 #How off the sum of a row is from 1
     reCalc = 0  #How much needs to be distributed or subtracted from each element
 
-
-# LOGBOOK:
-# No longer random from uniform distirbuted pool.
-# Need to improve stochasticity
-#
 
 ################################### DEBUGGER ###################################
 ## Output raw generated random values to compare with stochastic checker

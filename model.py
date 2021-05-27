@@ -3,7 +3,6 @@ import os
 import math
 import numpy as np
 
-
 class HMM:
     
     def __init__(self):
@@ -59,14 +58,9 @@ class HMM:
 
         # Alpha Pass alpha[0]
         self.c_scale[0] = 0
+        
         for i in range(0, self.N):
             alpha[0][i] = self.B[i][self.O[0]] * self.pi[i]
-
-            # if i == 0:
-            #     print(alpha[0][i])
-            #     print(self.pi[i])
-            #     print(self.B[i][self.O[0]])
-
             self.c_scale[0] += alpha[0][i]
         
         # Scale alhpha[0][i]
@@ -117,36 +111,28 @@ class HMM:
 
     def gamma_pass(self):
 
-        # Complile forward and backward layers on logic level 
+        # Complile forward and backward layers
         HMM.alpha_pass(self)
         HMM.beta_pass(self)
         
         gamma = self.gamma
         digamma = self.digamma
-
-        # Gamma and Digamma
+        
+        # Gamma and Digamma computation
         for t in range(0, self.T-1):
-            denom = 0
-            for i in range(0,self.N):
-                for j in range(0,self.N):
-                    denom += self.alpha[t][i] * self.A[i][j] * self.B[j][self.O[t+1]] * self.beta[t+1][j]
-            
-            for i in range(0,self.N):
+            for i in range(0, self.N):
+                gamma[t][i] = 0
                 for j in range(0, self.N):
-                    digamma[t][i][j] = self.alpha[t][i] * self.A[i][j] * self.B[j][self.O[t+1]] * self.beta[t+1][j] / denom
+                    digamma[t][i][j] = self.alpha[t][i] * self.A[i][j] * self.B[j][self.O[t+1]] * self.beta[t+1][j]
                     gamma[t][i] += digamma[t][i][j]
 
-        # Special case for Gamma
-        denom = 0
+        # Special case for Gamma[T-1][i]
         for i in range(0,self.N):
-            denom += self.alpha[self.T-1][i]
-
-        for i in range(0, self.N):
-            gamma[self.T-1][i] / denom
+            gamma[self.T-1][i] = self.alpha[self.T-1][i]
 
         self.gamma = gamma
         self.digamma = digamma
-
+        print(self.c_scale)
         return self.gamma, self.digamma
 
 
@@ -159,7 +145,7 @@ class HMM:
 
             # Re-estimate pi
             for i in range(0, self.N):
-                self.pi = self.gamma[0][i]
+                self.pi[i] = self.gamma[0][i]
             
             # Re-estimate A
             for i in range(0, self.N):
@@ -204,83 +190,6 @@ class HMM:
         print("\n------------ Lambda(pi) -------------\n", self.pi, "\n-------------------------")
         print("\n------------ Lambda(A) -------------\n", self.A, "\n-------------------------")
         print("\n------------ Lambda(B) -------------\n", self.B, "\n-------------------------")
-
+        print("\n------------ LogProb(O | Lambda) -------------\n", self.logProb, "\n-------------------------")
+        
         return self.pi, self.A, self.B
-
-
-    
-    # def buildModel(O):                      # COMPILES MODEL
-        
-    #     # UNDER CONSTRUCTION
-    #     logProb = 0.0
-    #     oldLogProb = -math.inf
-    #     iterations = 0
-    #     iterate = True
-    #     maxIterations = HMM.maxIterations
-
-    #     # Import raw base (pi ,A, B)
-    #     Pi = Structures.pi
-    #     A = Structures.A
-    #     B = Structures.B 
-
-    #     # Get matricies' dimensions
-    #     N = len(A)  
-    #     M = len(B[0])
-    #     T = len(O)
-        
-    #     while iterate:
-
-    #         # Calling Gamma calculation (triggers Alpha & Beta pass)
-    #         gamma = HMM.gamma_calculations(A,B,Pi, O)
-            
-    #         # Re-estimating pi
-    #         for i in range(0,N):
-    #             Pi[i] = gamma[0][i]
-
-    #         # Re-estimating A
-    #         for i in range(0,N):
-    #             denom = 0
-    #             for t in range(0,T-1):
-    #                 denom += gamma[t][i]
-
-    #             for j in range(0,N):
-    #                 numer = 0
-    #                 for t in range(0, T-1):
-    #                     numer += gamma[t][i] +  gamma[t][j]
-    #                 A[i][j] = numer / denom
-            
-    #         # Re-estimating B
-    #         for i in range(0, N):
-    #             denom = 0
-    #             for t in range(0, T):
-    #                 denom += gamma[t][i]
-    #             for j in range(0, M):
-    #                 numer = 0
-    #                 for t in range(0, T):
-    #                     if O[t] == j:
-    #                         numer += gamma[t][i]
-    #                 B[i][j] = numer / denom
-
-    #         # Compute log[P(O | Lambda)]
-    #         for i in range(0, T):
-    #             logProb += math.log(HMM.c[i]) 
-            
-    #         logProb *= -1
-
-    #         # To iterate or not to iterate, that is the question
-    #         iterations += 1
-    #         if iterations < maxIterations and logProb > oldLogProb:
-    #             oldLogProb = logProb
-    #             HMM.gamma_calculations(A, B, Pi, O)
-    #         else:
-    #             iterate = False
-        
-    #     print("--- MODEL OUTPUT PI --- \n ",Pi, "\n ---------\n")
-    #     print("--- MODEL OUTPUT A --- \n ",A, "\n ---------\n")
-    #     print("--- MODEL OUTPUT B --- \n ",B, "\n ---------\n")
-    #     print("--- MODEL OUTPUT LEARNING EPOCHS --- \n ",iterations, "\n ---------\n")
-    #     print("--- MODEL OUTPUT log[P(Observation | Lambda)] --- \n ",logProb, "\n ---------\n")
-        
-    #     return # Pi, A, B, iterations, logProb              # Might need to store model output?
-
-

@@ -2,10 +2,10 @@ import os
 import operator
 import random
 
-def counter(lst, x):
+def counter(lst, x):        # Helper function to return element count
     return lst.count(x)
 
-def splitDataList(list_malware, percent):
+def splitDataList(list_malware, percent):                   # Helper function to partition datasets
     howManyNumbers = int(round(percent*len(list_malware)))
     shuffled = list_malware[:]
     random.shuffle(shuffled)
@@ -51,9 +51,6 @@ for key in sorted_dist_winwebsec:
     if sorted_dist_winwebsec[key] <= 9:
         ranked_dist_winwebsec["C"].append(key)
 
-print(ranked_dist_winwebsec)
-# print(sorted_dist_winwebsec)
-
 for item in list_winwebsec:
     if item in ranked_dist_winwebsec["A"]:
         list_winwebsec[list_winwebsec.index(item)] = 0
@@ -98,7 +95,6 @@ for unique in unique_zbot:
 
 sorted_dist_zbot = dict(sorted(dist_zbot.items(), key=operator.itemgetter(1), reverse=True)) 
 
-
 for key in sorted_dist_zbot:
    
     if sorted_dist_zbot[key] >= 100:
@@ -109,9 +105,6 @@ for key in sorted_dist_zbot:
 
     if sorted_dist_zbot[key] <= 9:
         ranked_dist_zbot["C"].append(key)
-
-# print(sorted_dist_zbot)
-print(ranked_dist_zbot)
 
 for item in list_zbot:
     if item in ranked_dist_zbot["A"]:
@@ -157,7 +150,6 @@ for unique in unique_zeroaccess:
 
 sorted_dist_zeroaccess = dict(sorted(dist_zeroaccess.items(), key=operator.itemgetter(1), reverse=True)) 
 
-
 for key in sorted_dist_zeroaccess:
    
     if sorted_dist_zeroaccess[key] >= 100:
@@ -168,9 +160,6 @@ for key in sorted_dist_zeroaccess:
 
     if sorted_dist_zeroaccess[key] <= 9:
         ranked_dist_zeroaccess["C"].append(key)
-
-# print(sorted_dist_zeroaccess)
-print(ranked_dist_zeroaccess)
 
 for item in list_zeroaccess:
     if item in ranked_dist_zeroaccess["A"]:

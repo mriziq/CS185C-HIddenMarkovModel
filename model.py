@@ -22,7 +22,7 @@ class HMM:
         self.T = len(self.O)                # Length of Observations 
         self.N = len(self.pi)               # Number of states in the model
 
-        self.c_scale = [0] * len(self.O)    # C Scale
+        self.c_scale = [0] * len(self.O)    # C Scale vector
         
         self.iterate = True                 # Boolean to turn on loop
         self.iters = 0                      # Iteration counter

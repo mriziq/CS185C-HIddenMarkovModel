@@ -2,6 +2,9 @@ import random as r
 
 class data:                                                     # This class is to quickly retrieve pre-processed datasets.
 
+    def counter(lst, x):                                        # Helper function to return element count
+        return lst.count(x)
+
     def splitDataList(list_malware, percent):                   # Helper function to partition datasets
         howManyNumbers = int(round(percent*len(list_malware)))
         shuffled = list_malware[:]

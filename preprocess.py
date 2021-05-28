@@ -1,9 +1,7 @@
 import os
 import operator
 import random
-
-def counter(lst, x):        # Helper function to return element count
-    return lst.count(x)
+from data import data
 
 
 ####### WINWEBSEC #######
@@ -29,7 +27,7 @@ for item in list_winwebsec:
         unique_winwebsec.append(item)   
 
 for unique in unique_winwebsec:
-    x = counter(list_winwebsec, unique)
+    x = data.counter(list_winwebsec, unique)
     dist_winwebsec[unique]= x 
 
 sorted_dist_winwebsec = dict(sorted(dist_winwebsec.items(), key=operator.itemgetter(1), reverse=True)) 
@@ -84,7 +82,7 @@ for item in list_zbot:
         unique_zbot.append(item)   
 
 for unique in unique_zbot:
-    x = counter(list_zbot, unique)
+    x = data.counter(list_zbot, unique)
     dist_zbot[unique]= x 
 
 sorted_dist_zbot = dict(sorted(dist_zbot.items(), key=operator.itemgetter(1), reverse=True)) 
@@ -139,7 +137,7 @@ for item in list_zeroaccess:
         unique_zeroaccess.append(item)   
 
 for unique in unique_zeroaccess:
-    x = counter(list_zeroaccess, unique)
+    x = data.counter(list_zeroaccess, unique)
     dist_zeroaccess[unique]= x 
 
 sorted_dist_zeroaccess = dict(sorted(dist_zeroaccess.items(), key=operator.itemgetter(1), reverse=True)) 

@@ -1,9 +1,12 @@
+import random as r
+
 class data:                             # This class is to quickly retrieve pre-processed datasets.
 
     def dummy(T, M):
         dummy_observations = []
         for x in range(0, T+1):
             for i in range(0, M):
+                i = r.randint(0, M-1)
                 dummy_observations.append(i)
 
         return dummy_observations
@@ -52,3 +55,4 @@ class data:                             # This class is to quickly retrieve pre-
         train_zeroaccess = zeroaccess_observations
         
         return train_zeroaccess
+

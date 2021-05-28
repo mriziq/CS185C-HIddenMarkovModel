@@ -5,12 +5,6 @@ import random
 def counter(lst, x):        # Helper function to return element count
     return lst.count(x)
 
-def splitDataList(list_malware, percent):                   # Helper function to partition datasets
-    howManyNumbers = int(round(percent*len(list_malware)))
-    shuffled = list_malware[:]
-    random.shuffle(shuffled)
-    return shuffled[howManyNumbers:], shuffled[:howManyNumbers]
-
 
 ####### WINWEBSEC #######
 path = "Malicia-Big3-Opcodes/winwebsec/"

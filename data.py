@@ -1,7 +1,13 @@
 import random as r
 
-class data:                             # This class is to quickly retrieve pre-processed datasets.
+class data:                                                     # This class is to quickly retrieve pre-processed datasets.
 
+    def splitDataList(list_malware, percent):                   # Helper function to partition datasets
+        howManyNumbers = int(round(percent*len(list_malware)))
+        shuffled = list_malware[:]
+        r.shuffle(shuffled)
+        return shuffled[howManyNumbers:], shuffled[:howManyNumbers]
+    
     def dummy(T, M):
         dummy_observations = []
         for x in range(0, T+1):

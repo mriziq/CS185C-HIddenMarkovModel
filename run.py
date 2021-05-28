@@ -20,11 +20,11 @@ dummy_data = data.dummy(300, 3)     # Generate dummy data to test model with par
 maxIter = 100                       # Define maximum iterations
 key = data.train_winwebsec()        # Data class retrieves preprocessed training sets
 model = HMM()                       # Initialize HMM using start_engine method
-model.start_engine(key, maxIter)    # Parameters = Observation sequence, Maximum iterations
+print(model.start_engine(key, maxIter))    # Parameters = Observation sequence, Maximum iterations
 
-model.run_model()                   # Run specific algorithms or run complete model.
-# model.alpha_pass()
-# model.beta_pass()                
-# model.gamma_pass()                # Runs alpha, beta pass and gamma/digamma calculations. Returns gammas
+# model.run_model()                 # Run specific algorithms or run complete model.
+# print(model.alpha_pass())
+# print(model.beta_pass())
+# print(model.gamma_pass())           # Runs alpha, beta pass and gamma/digamma calculations. Returns gammas
 # model.getTestScore()              # Returns score = SUM(P( observation k, state q | model ))
 

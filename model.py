@@ -1,7 +1,9 @@
+from numpy.lib.arraysetops import unique
 from structures import Structures 
 import os
 import math
 import numpy as np
+from data import data
 
 class HMM:
     
@@ -10,8 +12,7 @@ class HMM:
         self.pi = Structures.pi
         self.A = Structures.A
         self.B = Structures.B
-        self.M = Structures.M
-        
+        self.M = Structures.M\
          
     def start_engine(self, O, maxIters):    # CONSTRUCTOR //
                                             # O = observation set [1xT]
@@ -20,7 +21,7 @@ class HMM:
         self.O = O                          # Observation sequence
         self.T = len(self.O)                # Length of Observations 
         self.N = len(self.pi)               # Number of states in the model
-        
+
         self.c_scale = [0] * len(self.O)    # C Scale
         
         self.iterate = True                 # Boolean to turn on loop
@@ -120,19 +121,27 @@ class HMM:
         
         # Gamma and Digamma computation
         for t in range(0, self.T-1):
+            denom = 0
+            for i in range(0, self.N):
+                for j in range(0, self.N):
+                    denom += self.alpha[t][i] * self.A[i][j] * self.B[j][ self.O[t+1] ] * self.beta[t+1][j]
+                    
             for i in range(0, self.N):
                 gamma[t][i] = 0
                 for j in range(0, self.N):
-                    digamma[t][i][j] = self.alpha[t][i] * self.A[i][j] * self.B[j][self.O[t+1]] * self.beta[t+1][j]
+                    digamma[t][i][j] = self.alpha[t][i] * self.A[i][j] * self.B[j][self.O[t+1]] * self.beta[t+1][j] / denom
                     gamma[t][i] += digamma[t][i][j]
 
         # Special case for Gamma[T-1][i]
+        denom = 0
+        for i in range(0, self.N):
+            denom += self.alpha[self.T-1][i]
+
         for i in range(0,self.N):
-            gamma[self.T-1][i] = self.alpha[self.T-1][i]
+            gamma[self.T-1][i] = self.alpha[self.T-1][i] / denom
 
         self.gamma = gamma
         self.digamma = digamma
-        print(self.c_scale)
         return self.gamma, self.digamma
 
 
@@ -142,6 +151,7 @@ class HMM:
             
             # Run compiled alpha pass, beta pass, gammas transformation
             HMM.gamma_pass(self)
+            print(self.alpha)
 
             # Re-estimate pi
             for i in range(0, self.N):

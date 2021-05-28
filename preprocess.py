@@ -176,7 +176,3 @@ trainingset_zeroaccess = open("training-data/trainingset_zeroaccess.txt", "w")
 for element in list_zeroaccess:
     trainingset_zeroaccess.write(f'{element} \n')
 trainingset_zeroaccess.close()
-
-
-
-

@@ -1,8 +1,11 @@
 class data:                             # This class is to quickly retrieve pre-processed datasets.
 
-    def dummy():
-        dummy_observations = [1,2,0,2,0,2,1,2,0,1,2,0,1,0,2]
-        # such that M = 2
+    def dummy(T, M):
+        dummy_observations = []
+        for x in range(0, T+1):
+            for i in range(0, M):
+                dummy_observations.append(i)
+
         return dummy_observations
 
     def train_winwebsec():
@@ -49,4 +52,3 @@ class data:                             # This class is to quickly retrieve pre-
         train_zeroaccess = zeroaccess_observations
         
         return train_zeroaccess
-    

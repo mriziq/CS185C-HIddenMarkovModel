@@ -16,6 +16,7 @@ from data import data
 #  Math note on syntax: B = {bj (k)} <-- B[j] = [0.5, 0.5]
 # -------------------------------------------------------------------------------- #
 
+dummy_data = data.dummy(300, 3)     # Generate dummy data to test model with parameters T & M (TODO: Make sure dummy data is random using entropy)
 maxIter = 100                       # Define maximum iterations
 key = data.train_winwebsec()        # Data class retrieves preprocessed training sets
 model = HMM()                       # Initialize HMM using start_engine method

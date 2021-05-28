@@ -35,7 +35,7 @@ class Structures:     # This class generates stochatic initial, transition, and 
     # Generate A NxN matrix of random numbers not yet stochastic
     for i in range(0, len(A)):
         for j in range(len(A[i])):
-            randomValue = min1 + (max1 - min1) * r.randint(begin, end)
+            randomValue = min1 + (max1 - min1) * np.random.normal()
             A[i][j] = randomValue
             rowSum += A[i][j]
         aRowSums.append(rowSum)
@@ -44,7 +44,7 @@ class Structures:     # This class generates stochatic initial, transition, and 
     # Generate B NxM matrix of random numbers not yet stochastic
     for i in range(0, len(B)):
         for j in range(len(B[i])):
-            randomValue = min2 + (max2 - min2) * r.randint(begin, end)
+            randomValue = min2 + (max2 - min2) * np.random.normal()
             B[i][j] = randomValue
             rowSum += B[i][j]
         bRowSums.append(rowSum)
@@ -53,7 +53,7 @@ class Structures:     # This class generates stochatic initial, transition, and 
 
     # Generate Pi 1xN matrix of random numbers not yet stochastic
     for i in range(0, len(pi)):
-        randomValue = min1 + (max1 - min1) * r.randint(begin, end)
+        randomValue = min1 + (max1 - min1) * np.random.normal()
         pi.append(randomValue)
         pi[i] = randomValue
 

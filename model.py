@@ -133,7 +133,7 @@ class HMM:
         for i in range(0,self.N):
             self.gamma[self.T-1][i] = self.alpha[self.T-1][i] / denom
 
-        return self.gamma, self.digamma
+        return self.gamma, self.digamma, self.alpha, self.beta
 
     def alpha_beta_tester(self):                    # Method used for debugging and testing alpha & beta pass.
         
@@ -149,7 +149,7 @@ class HMM:
             
             # Run compiled alpha pass, beta pass, gammas transformation
             HMM.gamma_pass(self)
-            print(self.iters, self.alpha)
+            print("\n -------- EPOCHS -------- ",self.iters + 1,"\n")
 
             # Re-estimate pi
             for i in range(0, self.N):

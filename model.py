@@ -12,7 +12,7 @@ class HMM:
         self.pi = Structures.pi
         self.A = Structures.A
         self.B = Structures.B
-        self.M = Structures.M\
+        self.M = Structures.M
          
     def start_engine(self, O, maxIters):    # CONSTRUCTOR //
                                             # O = observation set [1xT]
@@ -55,58 +55,54 @@ class HMM:
 
     
     def alpha_pass(self):                   # FORWARD ALG
-        alpha = self.alpha
 
         # Alpha Pass alpha[0]
         self.c_scale[0] = 0
         
         for i in range(0, self.N):
-            alpha[0][i] = self.B[i][self.O[0]] * self.pi[i]
-            self.c_scale[0] += alpha[0][i]
+            self.alpha[0][i] = self.B[i][self.O[0]] * self.pi[i]
+            self.c_scale[0] += self.alpha[0][i]
         
         # Scale alhpha[0][i]
         self.c_scale[0] = 1.0 / self.c_scale[0]
         for i in range(0, self.N):
-            alpha[0][i] *= self.c_scale[0]
+            self.alpha[0][i] *= self.c_scale[0]
         
         # Alpha Pass 
         for t in range(1, self.T):
             self.c_scale[t] = 0
             for i in range(0, self.N):
-                alpha[t][i] = 0
+                self.alpha[t][i] = 0
                 for j in range(0, self.N):
-                    alpha[t][i] += alpha[t-1][j] * self.A[j][i]
+                    self.alpha[t][i] += self.alpha[t-1][j] * self.A[j][i]
 
-                alpha[t][i] *= self.B[ i ][ self.O[t] ] 
-                self.c_scale[t] += alpha[t][i]
+                self.alpha[t][i] *= self.B[ i ][ self.O[t] ] 
+                self.c_scale[t] += self.alpha[t][i]
             
             # Scale Alpha
             self.c_scale[t] = 1 / self.c_scale[t] 
             for i in range(0, self.N):
-                alpha[t][i] *= self.c_scale[t]
+                self.alpha[t][i] *= self.c_scale[t]
 
-        self.alpha = alpha
         return self.alpha
     
 
     def beta_pass(self):                       # BACKWARD ALG
-        beta = self.beta
-
+    
         # Beta Pass beta[T-1]
         for i in range(0, self.N):
-            beta[self.T-1][i] = 1 / self.c_scale[self.T-1] 
+            self.beta[self.T-1][i] = 1 / self.c_scale[self.T-1] 
 
         # Beta Pass
         for t in reversed(range(0, self.T-1)):
             for i in range(0, self.N):
                 for j in range(0, self.N):
-                    beta[t][i] = beta[t][i] + self.A[i][j] * self.B[j][self.O[t+1]] * beta[t+1][j]
+                    self.beta[t][i] = self.beta[t][i] + self.A[i][j] * self.B[j][self.O[t+1]] * self.beta[t+1][j]
                     
             # Scale Beta
             for i in range(0, self.N):
-                beta[t][i] = self.c_scale[t] * beta[t][i]
-        
-        self.beta = beta
+                self.beta[t][i] = self.c_scale[t] * self.beta[t][i]
+
         return self.beta
 
 
@@ -115,10 +111,7 @@ class HMM:
         # Complile forward and backward layers
         HMM.alpha_pass(self)
         HMM.beta_pass(self)
-        
-        gamma = self.gamma
-        digamma = self.digamma
-        
+
         # Gamma and Digamma computation
         for t in range(0, self.T-1):
             denom = 0
@@ -127,10 +120,10 @@ class HMM:
                     denom += self.alpha[t][i] * self.A[i][j] * self.B[j][ self.O[t+1] ] * self.beta[t+1][j]
                     
             for i in range(0, self.N):
-                gamma[t][i] = 0
+                self.gamma[t][i] = 0
                 for j in range(0, self.N):
-                    digamma[t][i][j] = self.alpha[t][i] * self.A[i][j] * self.B[j][self.O[t+1]] * self.beta[t+1][j] / denom
-                    gamma[t][i] += digamma[t][i][j]
+                    self.digamma[t][i][j] = self.alpha[t][i] * self.A[i][j] * self.B[j][self.O[t+1]] * self.beta[t+1][j] / denom
+                    self.gamma[t][i] += self.digamma[t][i][j]
 
         # Special case for Gamma[T-1][i]
         denom = 0
@@ -138,11 +131,16 @@ class HMM:
             denom += self.alpha[self.T-1][i]
 
         for i in range(0,self.N):
-            gamma[self.T-1][i] = self.alpha[self.T-1][i] / denom
+            self.gamma[self.T-1][i] = self.alpha[self.T-1][i] / denom
 
-        self.gamma = gamma
-        self.digamma = digamma
         return self.gamma, self.digamma
+
+    def alpha_beta_tester(self):                    # Method used for debugging and testing alpha & beta pass.
+        
+        # Must run alpha pass first to generate scaling factor used in beta pass
+        alpha = HMM.alpha_pass(self)
+        beta = HMM.beta_pass(self)
+        return alpha, beta
 
 
     def run_model(self):
@@ -151,7 +149,7 @@ class HMM:
             
             # Run compiled alpha pass, beta pass, gammas transformation
             HMM.gamma_pass(self)
-            print(self.alpha)
+            print(self.iters, self.alpha)
 
             # Re-estimate pi
             for i in range(0, self.N):
